@@ -1,0 +1,203 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form_name']) && $_POST['form_name'] == 'loginform')
+{
+   $success_page = '';
+   $error_page = basename(__FILE__);
+   $database = './usersdb.php';
+   $crypt_pass = md5($_POST['password']);
+   $found = false;
+   $fullname = '';
+   $session_timeout = 600;
+   if(filesize($database) > 0)
+   {
+      $items = file($database, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach($items as $line)
+      {
+         list($username, $password, $email, $name, $active) = explode('|', trim($line));
+         if ($username == $_POST['username'] && $active != "0" && $password == $crypt_pass)
+         {
+            $found = true;
+            $fullname = $name;
+         }
+      }
+   }
+   if($found == false)
+   {
+      header('Location: '.$error_page);
+      exit;
+   }
+   else
+   {
+      if (session_id() == "")
+      {
+         session_start();
+      }
+      $_SESSION['username'] = $_POST['username'];
+      $_SESSION['fullname'] = $fullname;
+      $_SESSION['expires_by'] = time() + $session_timeout;
+      $_SESSION['expires_timeout'] = $session_timeout;
+      $rememberme = isset($_POST['rememberme']) ? true : false;
+      if ($rememberme)
+      {
+         setcookie('username', $_POST['username'], time() + 3600*24*30);
+         setcookie('password', $_POST['password'], time() + 3600*24*30);
+      }
+      header('Location: '.$success_page);
+      exit;
+   }
+}
+$username = isset($_COOKIE['username']) ? $_COOKIE['username'] : '';
+$password = isset($_COOKIE['password']) ? $_COOKIE['password'] : '';
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Untitled Page</title>
+<meta name="generator" content="WYSIWYG Web Builder 11 Trial Version - http://www.wysiwygwebbuilder.com">
+<style type="text/css">
+body
+{
+   background-color: #FFFFFF;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   line-height: 1.1875;
+   margin: 0;
+   padding: 0;
+}
+a
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+a:visited
+{
+   color: #800080;
+}
+a:active
+{
+   color: #FF0000;
+}
+a:hover
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+#Login1
+{
+   background-color: #FFFFFF;
+   border-color:#CCCCCC;
+   border-width:1px;
+   border-style: solid;
+   -moz-border-radius: 4px;
+   -webkit-border-radius: 4px;
+   border-radius: 4px;
+   color: #000000;
+   border-spacing: 6px;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   text-align: left;
+   width: 417px;
+   height: 282px;
+}
+#Login1 td
+{
+   padding: 0;
+}
+#Login1 .header
+{
+   background-color: #878787;
+   color: #FFFFFF;
+   height: 16px;
+   padding: 4px 4px 4px 4px;
+   text-align: center;
+}
+#Login1 .label
+{
+   height: 16px;
+}
+#Login1 .row
+{
+   height: 30px;
+   text-align: left;
+}
+#Login1 .input
+{
+   background-color: #FFFFFF;
+   border-color: #CCCCCC;
+   border-width: 1px;
+   border-style: solid;
+   -moz-border-radius: 2px;
+   -webkit-border-radius: 2px;
+   border-radius: 2px;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   width: 100%;
+   height: 30px;
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing: border-box;
+   box-sizing: border-box;
+   padding: 6px 4px 6px 4px;
+}
+#Login1 .input:focus
+{
+   border-color: #66AFE9;
+   outline: 0;
+   -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+}
+#Login1 .button
+{
+   background-color: #3370B7;
+   border-color: #2E6DA4;
+   border-width: 1px;
+   border-style: solid;
+   -moz-border-radius: 3px;
+   -webkit-border-radius: 3px;
+   border-radius: 3px;
+   color: #FFFFFF;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   padding: 4px 14px 4px 14px;
+}
+</style>
+</head>
+<body>
+<a href="http://www.wysiwygwebbuilder.com" target="_blank"><img src="images/builtwithwwb11.png" alt="WYSIWYG Web Builder" style="position:absolute;left:441px;top:967px;border-width:0;z-index:250"></a>
+<div id="wb_Login1" style="position:absolute;left:213px;top:72px;width:417px;height:282px;z-index:1;">
+<form name="loginform" method="post" accept-charset="UTF-8" action="<?php echo basename(__FILE__); ?>" id="loginform">
+<input type="hidden" name="form_name" value="loginform">
+<table id="Login1">
+<tr>
+   <td class="header">Log In</td>
+</tr>
+<tr>
+   <td class="label"><label for="username">User Name</label></td>
+</tr>
+<tr>
+   <td class="row"><input class="input" name="username" type="text" id="username" value="<?php echo $username; ?>"></td>
+</tr>
+<tr>
+   <td class="label"><label for="password">Password</label></td>
+</tr>
+<tr>
+   <td class="row"><input class="input" name="password" type="password" id="password" value="<?php echo $password; ?>"></td>
+</tr>
+<tr>
+   <td class="row"><input id="rememberme" type="checkbox" name="rememberme"><label for="rememberme">Remember me</label></td>
+</tr>
+<tr>
+   <td style="text-align:center;vertical-align:bottom"><input class="button" type="submit" name="login" value="Log In" id="login"></td>
+</tr>
+</table>
+</form>
+</div>
+</body>
+</html>

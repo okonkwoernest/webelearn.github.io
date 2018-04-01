@@ -1,0 +1,220 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form_name']) && $_POST['form_name'] == 'forgotpasswordform')
+{
+   $email = isset($_POST['email']) ? addslashes($_POST['email']) : '';
+   $found = false;
+   $items = array();
+   $success_page = '';
+   $error_page = basename(__FILE__);
+   $database = './usersdb.php';
+   if (filesize($database) == 0 || empty($email))
+   {
+      header('Location: '.$error_page);
+      exit;
+   }
+   else
+   {
+      $items = file($database, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach($items as $line)
+      {
+         list($username, $password, $emailaddress, $fullname, $active) = explode('|', trim($line));
+         if ($email == $emailaddress && $active != "0")
+         {
+            $found = true;
+         }
+      }
+   }
+   if ($found == true)
+   {
+      $alphanum = array('a','b','c','d','e','f','g','h','i','j','k','m','n','o','p','q','r','s','t','u','v','x','y','z','A','B','C','D','E','F','G','H','I','J','K','M','N','P','Q','R','S','T','U','V','W','X','Y','Z','2','3','4','5','6','7','8','9');
+      $chars = sizeof($alphanum);
+      $a = time();
+      mt_srand($a);
+      for ($i=0; $i < 6; $i++)
+      {
+         $randnum = intval(mt_rand(0,55));
+         $newpassword .= $alphanum[$randnum];
+      }
+      $crypt_pass = md5($newpassword);
+      $file = fopen($database, 'w');
+      foreach($items as $line)
+      {
+         $values = explode('|', trim($line));
+         if ($email == $values[2])
+         {
+            $values[1] = $crypt_pass;
+            $line = '';
+            for ($i=0; $i < count($values); $i++)
+            {
+               if ($i != 0)
+                  $line .= '|';
+               $line .= $values[$i];
+            }
+         }
+         fwrite($file, $line);
+         fwrite($file, "\r\n");
+      }
+      fclose($file);
+      $mailto = $_POST['email'];
+      $subject = 'New password';
+      $message = 'Your new password for http://www.yourwebsite.com/ is:';
+      $message .= $newpassword;
+      $header  = "From: webmaster@yourwebsite.com"."\r\n";
+      $header .= "Reply-To: webmaster@yourwebsite.com"."\r\n";
+      $header .= "MIME-Version: 1.0"."\r\n";
+      $header .= "Content-Type: text/plain; charset=utf-8"."\r\n";
+      $header .= "Content-Transfer-Encoding: 8bit"."\r\n";
+      $header .= "X-Mailer: PHP v".phpversion();
+      mail($mailto, $subject, $message, $header);
+      header('Location: '.$success_page);
+   }
+   else
+   {
+      header('Location: '.$error_page);
+   }
+   exit;
+}
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Untitled Page</title>
+<meta name="generator" content="WYSIWYG Web Builder 11 Trial Version - http://www.wysiwygwebbuilder.com">
+<style type="text/css">
+body
+{
+   background-color: #FFFFFF;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   line-height: 1.1875;
+   margin: 0;
+   padding: 0;
+}
+a
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+a:visited
+{
+   color: #800080;
+}
+a:active
+{
+   color: #FF0000;
+}
+a:hover
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+#PasswordRecovery1
+{
+   background-color: #FFFFFF;
+   border-color:#CCCCCC;
+   border-width:1px;
+   border-style: solid;
+   -moz-border-radius: 4px;
+   -webkit-border-radius: 4px;
+   border-radius: 4px;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   text-align: left;
+   border-spacing: 6px;
+   width: 401px;
+   height: 128px;
+}
+#PasswordRecovery1 td
+{
+   padding: 0;
+}
+#PasswordRecovery1 .header
+{
+   background-color: #878787;
+   color: #FFFFFF;
+   height: 16px;
+   padding: 4px 4px 4px 4px;
+   text-align: center;
+}
+#PasswordRecovery1 .label
+{
+   height: 16px;
+}
+#PasswordRecovery1 .row
+{
+   height: 30px;
+   text-align: left;
+}
+#PasswordRecovery1 .input
+{
+   background-color: #FFFFFF;
+   border-color: #CCCCCC;
+   border-width: 1px;
+   border-style: solid;
+   -moz-border-radius: 3px;
+   -webkit-border-radius: 3px;
+   border-radius: 3px;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   width: 100%;
+   height: 30px;
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing: border-box;
+   box-sizing: border-box;
+   padding: 6px 4px 6px 4px;
+}
+#PasswordRecovery1 .input:focus
+{
+   border-color: #66AFE9;
+   outline: 0;
+   -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+}
+#PasswordRecovery1 .button
+{
+   background-color: #3370B7;
+   border-color: #2E6DA4;
+   border-width: 1px;
+   border-style: solid;
+   -moz-border-radius: 3px;
+   -webkit-border-radius: 3px;
+   border-radius: 3px;
+   color: #FFFFFF;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   padding: 4px 14px 4px 14px;
+}
+</style>
+</head>
+<body>
+<a href="http://www.wysiwygwebbuilder.com" target="_blank"><img src="images/builtwithwwb11.png" alt="WYSIWYG Web Builder" style="position:absolute;left:441px;top:967px;border-width:0;z-index:250"></a>
+<div id="wb_PasswordRecovery1" style="position:absolute;left:207px;top:146px;width:401px;height:128px;z-index:1;">
+<form name="forgotpasswordform" method="post" accept-charset="UTF-8" action="<?php echo basename(__FILE__); ?>" id="forgotpasswordform">
+<input type="hidden" name="form_name" value="forgotpasswordform">
+<table id="PasswordRecovery1">
+<tr>
+   <td class="header">Forgot your password?</td>
+</tr>
+<tr>
+   <td class="label"><label for="email">Email</label></td>
+</tr>
+<tr>
+   <td class="row"><input class="input" name="email" type="text" id="email"></td>
+</tr>
+<tr>
+   <td style="text-align:center;vertical-align:bottom"><input class="button" type="submit" name="submit" value="Submit" id="submit"></td>
+</tr>
+</table>
+</form>
+</div>
+</body>
+</html>
